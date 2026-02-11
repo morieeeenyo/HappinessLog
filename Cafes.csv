@@ -1,0 +1,4 @@
+CafeID,Name,Address,NearestStation,Visited,Notes,CreatedAt
+cafe-001,Blue Bottle Coffee Shibuya,東京都渋谷区神南1-7-3,渋谷駅,TRUE,朝の時間帯が静か,2026-02-11 14:30:00
+cafe-002,ONIBUS COFFEE Nakameguro,東京都目黒区上目黒2-14-1,中目黒駅,TRUE,ラテが美味しい,2026-02-11 14:30:00
+cafe-003,Streamer Coffee Company Harajuku,東京都渋谷区神宮前3-28-19,明治神宮前駅,FALSE,,2026-02-11 14:30:00

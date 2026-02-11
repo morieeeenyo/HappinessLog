@@ -1,0 +1,3 @@
+ReviewID,CafeID,VisitDate,Rating,Title,Comment,Photo,ReviewerEmail,CreatedAt
+rev-001,cafe-001,2026-02-01,5,作業しやすい,Wi-Fiが安定していて席も快適,,user@example.com,2026-02-11 14:30:00
+rev-002,cafe-002,2026-02-05,4,ラテが濃厚,スタッフさんが丁寧で居心地が良い,,user@example.com,2026-02-11 14:30:00
