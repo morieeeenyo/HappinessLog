@@ -148,13 +148,7 @@ export function CoupleBucketListApp() {
       <section className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
         <div className="rounded-[2rem] bg-ink px-6 py-7 text-white shadow-sm md:px-8 md:py-9">
           <p className="text-sm font-semibold text-aqua">Wishlist for Two</p>
-          <h1 className="mt-3 max-w-2xl text-3xl font-bold leading-tight md:text-5xl">
-            二人でやりたいことだけを、迷わず一緒に育てる。
-          </h1>
-          <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-200 md:text-base">
-            思いついた願いを追加して、メモと進み具合だけをすっきり管理できます。
-          </p>
-          <div className="mt-7 grid gap-3 sm:grid-cols-3">
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
             <Metric label="登録数" value={`${items.length}件`} />
             <Metric label="達成率" value={`${progressPercent}%`} />
             <Metric label="進行中" value={`${activeCount}件`} />
