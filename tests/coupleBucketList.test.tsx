@@ -31,4 +31,11 @@ describe("CoupleBucketListApp", () => {
 
     expect(screen.getAllByRole("button", { name: "予定あり" }).length).toBeGreaterThan(0);
   });
+
+  it("does not render category or owner controls", () => {
+    render(<CoupleBucketListApp />);
+
+    expect(screen.queryByLabelText("種類")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("担当")).not.toBeInTheDocument();
+  });
 });

@@ -3,15 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 
 type WishStatus = "planning" | "booked" | "done";
-type WishCategory = "date" | "travel" | "home" | "food" | "growth";
-type Partner = "二人" | "Aさん" | "Bさん";
 
 type WishItem = {
   id: number;
   title: string;
-  category: WishCategory;
   status: WishStatus;
-  owner: Partner;
   season: string;
   budget: number;
   note: string;
@@ -21,9 +17,7 @@ const initialItems: WishItem[] = [
   {
     id: 1,
     title: "海が見える宿に一泊する",
-    category: "travel",
     status: "planning",
-    owner: "二人",
     season: "夏",
     budget: 42000,
     note: "移動時間は片道2時間くらいまで"
@@ -31,9 +25,7 @@ const initialItems: WishItem[] = [
   {
     id: 2,
     title: "金曜の夜に手巻き寿司を作る",
-    category: "food",
     status: "booked",
-    owner: "Aさん",
     season: "今月",
     budget: 6000,
     note: "好きな具材をそれぞれ3つ買う"
@@ -41,9 +33,7 @@ const initialItems: WishItem[] = [
   {
     id: 3,
     title: "二人の写真をアルバムにする",
-    category: "home",
     status: "planning",
-    owner: "Bさん",
     season: "春",
     budget: 9000,
     note: "旅行と記念日の写真から選ぶ"
@@ -51,22 +41,11 @@ const initialItems: WishItem[] = [
   {
     id: 4,
     title: "朝の散歩コースを開拓する",
-    category: "date",
     status: "done",
-    owner: "二人",
     season: "週末",
     budget: 0,
     note: "帰りにコーヒーを買う"
   }
-];
-
-const categories: Array<{ value: WishCategory | "all"; label: string }> = [
-  { value: "all", label: "すべて" },
-  { value: "date", label: "デート" },
-  { value: "travel", label: "旅行" },
-  { value: "home", label: "暮らし" },
-  { value: "food", label: "食事" },
-  { value: "growth", label: "学び" }
 ];
 
 const statusLabels: Record<WishStatus, string> = {
@@ -75,26 +54,31 @@ const statusLabels: Record<WishStatus, string> = {
   done: "達成"
 };
 
-const categoryLabels: Record<WishCategory, string> = {
-  date: "デート",
-  travel: "旅行",
-  home: "暮らし",
-  food: "食事",
-  growth: "学び"
-};
-
-const partners: Partner[] = ["二人", "Aさん", "Bさん"];
 const storageKey = "futari-list-items";
+
+function normalizeItem(item: Partial<WishItem>): WishItem | null {
+  if (!item.title) {
+    return null;
+  }
+
+  const status = item.status === "booked" || item.status === "done" ? item.status : "planning";
+
+  return {
+    id: typeof item.id === "number" ? item.id : Date.now(),
+    title: item.title,
+    status,
+    season: item.season || "いつか",
+    budget: typeof item.budget === "number" && Number.isFinite(item.budget) ? item.budget : 0,
+    note: item.note || "まだメモはありません"
+  };
+}
 
 export function CoupleBucketListApp() {
   const [items, setItems] = useState(initialItems);
   const [isHydrated, setIsHydrated] = useState(false);
-  const [category, setCategory] = useState<WishCategory | "all">("all");
   const [query, setQuery] = useState("");
   const [form, setForm] = useState({
     title: "",
-    category: "date" as WishCategory,
-    owner: "二人" as Partner,
     season: "今月",
     budget: 5000,
     note: ""
@@ -104,7 +88,8 @@ export function CoupleBucketListApp() {
     const savedItems = window.localStorage.getItem(storageKey);
     if (savedItems) {
       try {
-        setItems(JSON.parse(savedItems) as WishItem[]);
+        const parsedItems = JSON.parse(savedItems) as Array<Partial<WishItem>>;
+        setItems(parsedItems.map(normalizeItem).filter((item): item is WishItem => Boolean(item)));
       } catch {
         window.localStorage.removeItem(storageKey);
       }
@@ -122,12 +107,10 @@ export function CoupleBucketListApp() {
     const normalizedQuery = query.trim().toLowerCase();
 
     return items.filter((item) => {
-      const matchesCategory = category === "all" || item.category === category;
-      const searchable = `${item.title} ${item.note} ${item.season} ${item.owner}`.toLowerCase();
-      const matchesQuery = !normalizedQuery || searchable.includes(normalizedQuery);
-      return matchesCategory && matchesQuery;
+      const searchable = `${item.title} ${item.note} ${item.season}`.toLowerCase();
+      return !normalizedQuery || searchable.includes(normalizedQuery);
     });
-  }, [category, items, query]);
+  }, [items, query]);
 
   const completedCount = items.filter((item) => item.status === "done").length;
   const plannedBudget = items
@@ -149,9 +132,7 @@ export function CoupleBucketListApp() {
       {
         id: Date.now(),
         title,
-        category: form.category,
         status: "planning",
-        owner: form.owner,
         season: form.season.trim() || "いつか",
         budget,
         note: form.note.trim() || "まだメモはありません"
@@ -187,12 +168,12 @@ export function CoupleBucketListApp() {
     <div className="space-y-8">
       <section className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
         <div className="rounded-[2rem] bg-ink px-6 py-7 text-white shadow-sm md:px-8 md:py-9">
-          <p className="text-sm font-semibold text-aqua">Couple Bucket List</p>
+          <p className="text-sm font-semibold text-aqua">Wishlist for Two</p>
           <h1 className="mt-3 max-w-2xl text-3xl font-bold leading-tight md:text-5xl">
-            二人で叶えたいことを、相談から達成まで一緒に育てる。
+            二人でやりたいことだけを、迷わず一緒に育てる。
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-200 md:text-base">
-            デート、旅行、暮らしの小さな願いをまとめて、担当・時期・予算・進み具合を一画面で確認できます。
+            思いついた願いを追加して、時期・予算・メモ・進み具合を一画面で管理できます。
           </p>
           <div className="mt-7 grid gap-3 sm:grid-cols-3">
             <Metric label="登録数" value={`${items.length}件`} />
@@ -213,38 +194,6 @@ export function CoupleBucketListApp() {
                 placeholder="例: 温泉でゆっくり過ごす"
               />
             </label>
-
-            <div className="grid grid-cols-2 gap-3">
-              <label className="block text-sm font-medium text-slate-700">
-                種類
-                <select
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-aqua focus:ring-2 focus:ring-aqua/20"
-                  value={form.category}
-                  onChange={(event) => setForm({ ...form, category: event.target.value as WishCategory })}
-                >
-                  {categories
-                    .filter((item) => item.value !== "all")
-                    .map((item) => (
-                      <option key={item.value} value={item.value}>
-                        {item.label}
-                      </option>
-                    ))}
-                </select>
-              </label>
-
-              <label className="block text-sm font-medium text-slate-700">
-                担当
-                <select
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-aqua focus:ring-2 focus:ring-aqua/20"
-                  value={form.owner}
-                  onChange={(event) => setForm({ ...form, owner: event.target.value as Partner })}
-                >
-                  {partners.map((partner) => (
-                    <option key={partner}>{partner}</option>
-                  ))}
-                </select>
-              </label>
-            </div>
 
             <div className="grid grid-cols-2 gap-3">
               <label className="block text-sm font-medium text-slate-700">
@@ -290,7 +239,7 @@ export function CoupleBucketListApp() {
       <section className="space-y-4">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-ink">二人のリスト</h2>
+            <h2 className="text-2xl font-bold text-ink">やりたいことリスト</h2>
             <p className="mt-1 text-sm text-slate-600">相談中、予定あり、達成を押すたびに切り替えられます。</p>
           </div>
           <input
@@ -301,30 +250,12 @@ export function CoupleBucketListApp() {
           />
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {categories.map((item) => {
-            const selected = item.value === category;
-            return (
-              <button
-                className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition ${
-                  selected ? "bg-ink text-white" : "bg-white text-slate-700 hover:bg-slate-100"
-                }`}
-                key={item.value}
-                onClick={() => setCategory(item.value)}
-                type="button"
-              >
-                {item.label}
-              </button>
-            );
-          })}
-        </div>
-
         <div className="grid gap-4 md:grid-cols-2">
           {visibleItems.map((item) => (
             <article className="rounded-2xl bg-white p-5 shadow-sm" key={item.id}>
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs font-semibold text-aqua">{categoryLabels[item.category]}</p>
+                  <p className="text-xs font-semibold text-aqua">{item.season}</p>
                   <h3 className="mt-1 text-xl font-bold text-ink">{item.title}</h3>
                 </div>
                 <button
@@ -344,8 +275,7 @@ export function CoupleBucketListApp() {
 
               <p className="mt-3 min-h-12 text-sm leading-6 text-slate-600">{item.note}</p>
 
-              <dl className="mt-4 grid grid-cols-3 gap-2 text-sm">
-                <Info label="担当" value={item.owner} />
+              <dl className="mt-4 grid grid-cols-2 gap-2 text-sm">
                 <Info label="時期" value={item.season} />
                 <Info label="予算" value={`¥${item.budget.toLocaleString()}`} />
               </dl>
