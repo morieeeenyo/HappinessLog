@@ -8,8 +8,6 @@ type WishItem = {
   id: number;
   title: string;
   status: WishStatus;
-  season: string;
-  budget: number;
   note: string;
 };
 
@@ -18,32 +16,24 @@ const initialItems: WishItem[] = [
     id: 1,
     title: "海が見える宿に一泊する",
     status: "planning",
-    season: "夏",
-    budget: 42000,
     note: "移動時間は片道2時間くらいまで"
   },
   {
     id: 2,
     title: "金曜の夜に手巻き寿司を作る",
     status: "booked",
-    season: "今月",
-    budget: 6000,
     note: "好きな具材をそれぞれ3つ買う"
   },
   {
     id: 3,
     title: "二人の写真をアルバムにする",
     status: "planning",
-    season: "春",
-    budget: 9000,
     note: "旅行と記念日の写真から選ぶ"
   },
   {
     id: 4,
     title: "朝の散歩コースを開拓する",
     status: "done",
-    season: "週末",
-    budget: 0,
     note: "帰りにコーヒーを買う"
   }
 ];
@@ -67,8 +57,6 @@ function normalizeItem(item: Partial<WishItem>): WishItem | null {
     id: typeof item.id === "number" ? item.id : Date.now(),
     title: item.title,
     status,
-    season: item.season || "いつか",
-    budget: typeof item.budget === "number" && Number.isFinite(item.budget) ? item.budget : 0,
     note: item.note || "まだメモはありません"
   };
 }
@@ -79,8 +67,6 @@ export function CoupleBucketListApp() {
   const [query, setQuery] = useState("");
   const [form, setForm] = useState({
     title: "",
-    season: "今月",
-    budget: 5000,
     note: ""
   });
 
@@ -107,15 +93,13 @@ export function CoupleBucketListApp() {
     const normalizedQuery = query.trim().toLowerCase();
 
     return items.filter((item) => {
-      const searchable = `${item.title} ${item.note} ${item.season}`.toLowerCase();
+      const searchable = `${item.title} ${item.note}`.toLowerCase();
       return !normalizedQuery || searchable.includes(normalizedQuery);
     });
   }, [items, query]);
 
   const completedCount = items.filter((item) => item.status === "done").length;
-  const plannedBudget = items
-    .filter((item) => item.status !== "done")
-    .reduce((sum, item) => sum + item.budget, 0);
+  const activeCount = items.length - completedCount;
   const progressPercent = items.length > 0 ? Math.round((completedCount / items.length) * 100) : 0;
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -126,15 +110,11 @@ export function CoupleBucketListApp() {
       return;
     }
 
-    const budget = Number.isFinite(form.budget) ? Math.max(0, form.budget) : 0;
-
     setItems((current) => [
       {
         id: Date.now(),
         title,
         status: "planning",
-        season: form.season.trim() || "いつか",
-        budget,
         note: form.note.trim() || "まだメモはありません"
       },
       ...current
@@ -143,8 +123,7 @@ export function CoupleBucketListApp() {
     setForm((current) => ({
       ...current,
       title: "",
-      note: "",
-      budget: 5000
+      note: ""
     }));
   };
 
@@ -173,12 +152,12 @@ export function CoupleBucketListApp() {
             二人でやりたいことだけを、迷わず一緒に育てる。
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-200 md:text-base">
-            思いついた願いを追加して、時期・予算・メモ・進み具合を一画面で管理できます。
+            思いついた願いを追加して、メモと進み具合だけをすっきり管理できます。
           </p>
           <div className="mt-7 grid gap-3 sm:grid-cols-3">
             <Metric label="登録数" value={`${items.length}件`} />
             <Metric label="達成率" value={`${progressPercent}%`} />
-            <Metric label="予定予算" value={`¥${plannedBudget.toLocaleString()}`} />
+            <Metric label="進行中" value={`${activeCount}件`} />
           </div>
         </div>
 
@@ -194,29 +173,6 @@ export function CoupleBucketListApp() {
                 placeholder="例: 温泉でゆっくり過ごす"
               />
             </label>
-
-            <div className="grid grid-cols-2 gap-3">
-              <label className="block text-sm font-medium text-slate-700">
-                時期
-                <input
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-aqua focus:ring-2 focus:ring-aqua/20"
-                  value={form.season}
-                  onChange={(event) => setForm({ ...form, season: event.target.value })}
-                />
-              </label>
-
-              <label className="block text-sm font-medium text-slate-700">
-                予算
-                <input
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-aqua focus:ring-2 focus:ring-aqua/20"
-                  min={0}
-                  step={1000}
-                  type="number"
-                  value={form.budget}
-                  onChange={(event) => setForm({ ...form, budget: Number(event.target.value) })}
-                />
-              </label>
-            </div>
 
             <label className="block text-sm font-medium text-slate-700">
               メモ
@@ -255,8 +211,7 @@ export function CoupleBucketListApp() {
             <article className="rounded-2xl bg-white p-5 shadow-sm" key={item.id}>
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs font-semibold text-aqua">{item.season}</p>
-                  <h3 className="mt-1 text-xl font-bold text-ink">{item.title}</h3>
+                  <h3 className="text-xl font-bold text-ink">{item.title}</h3>
                 </div>
                 <button
                   className={`rounded-full px-3 py-1 text-xs font-bold ${
@@ -274,11 +229,6 @@ export function CoupleBucketListApp() {
               </div>
 
               <p className="mt-3 min-h-12 text-sm leading-6 text-slate-600">{item.note}</p>
-
-              <dl className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                <Info label="時期" value={item.season} />
-                <Info label="予算" value={`¥${item.budget.toLocaleString()}`} />
-              </dl>
 
               <div className="mt-4 flex justify-end">
                 <button className="text-sm font-semibold text-slate-500 hover:text-red-600" onClick={() => removeItem(item.id)} type="button">
@@ -304,15 +254,6 @@ function Metric({ label, value }: { label: string; value: string }) {
     <div className="rounded-2xl bg-white/10 p-4">
       <p className="text-xs font-semibold text-slate-300">{label}</p>
       <p className="mt-1 text-2xl font-bold">{value}</p>
-    </div>
-  );
-}
-
-function Info({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl bg-slate-50 p-3">
-      <dt className="text-xs font-semibold text-slate-400">{label}</dt>
-      <dd className="mt-1 truncate font-semibold text-slate-700">{value}</dd>
     </div>
   );
 }
