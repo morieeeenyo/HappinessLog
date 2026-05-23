@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Happy Couple Points",
-  description: "A couple app to collect happy moments and reach monthly goals"
+  title: "Futari List",
+  description: "カップル・夫婦でやりたいことを管理するアプリ"
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
